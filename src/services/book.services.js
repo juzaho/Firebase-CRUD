@@ -3,7 +3,8 @@ import {db} from "../firebase-config";
 //Firestore methods
 import { collection, getDocs, getDoc, addDoc, updateDoc, deleteDoc, doc } from "firebase/firestore";
 
-const bookCollectionRef = collection(db, "Books")
+const bookCollectionRef = collection(db, "Books");
+
 class BookDataService {
   addBooks = (newBook) => {
     return addDoc(bookCollectionRef, newBook);
@@ -24,7 +25,8 @@ class BookDataService {
   }
 
   getBook = (id) => {
-    
+    const bookDoc = doc(db, "Books", id);
+    return getDoc(bookDoc);
   }
 }
 

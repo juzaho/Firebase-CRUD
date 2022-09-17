@@ -1,8 +1,9 @@
 import { Form, InputGroup, Button, ButtonGroup, Alert } from "react-bootstrap";
 import React from "react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import BookDataService from "../services/book.services";
 
-export default function AddBook() {
+export default function AddBook({ id, setBookId }) {
   const [title, setTitle] = useState("");
   const [author, setAuthor] = useState("");
   const [status, setStatus] = useState("Available");
@@ -10,20 +11,67 @@ export default function AddBook() {
   const [message, setMessage] = useState({ error: false, msg: "" });
 
   const handleSubmit = async (e) => {
-    //do stuff hehe
-    e.preventDefault();
+    e.preventDefault(); //prevents page refresh on form submit
 
-    
+    setMessage("");
+
+    if (title === "" || author === "") {
+      setMessage({ error: true, msg: "All fields are mandatory!" });
+      return;
+    }
+
+    const newBook = {
+      title,
+      author,
+      status,
+    };
+
+    try {
+      if (id !== undefined && id !== "") {
+        await BookDataService.updateBook(id, newBook);
+        setBookId("");
+        setMessage({ error: false, msg: "Book successfully updated!" });
+      } else {
+        await BookDataService.addBooks(newBook);
+        setMessage({ error: false, msg: "Book successfully added!" });
+      }
+    } catch (err) {
+      setMessage({ error: true, msg: err.message });
+    }
+
+    setTitle("");
+    setAuthor("");
   };
+
+  const editHandler = async () => {
+    setMessage("");
+
+    try {
+      const docSnap = await BookDataService.getBook(id);
+      setTitle(docSnap.data().title);
+      setAuthor(docSnap.data().author);
+      setStatus(docSnap.data().status);
+      //setMessage({error: false, msg: "Book updated successfully."})
+    } catch (err) {
+      setMessage({ error: true, msg: err.message });
+    }
+  };
+
+  useEffect(() => {
+    if (id !== undefined && id !== "") {
+      editHandler();
+    }
+  }, [id]);
 
   return (
     <>
       <div className="p-4 box">
         {message?.msg && (
           <Alert
-          variant={message?.error ? "danger": "success"}
-          dismissible
-          onClose={()=>setMessage("")}>
+            variant={message?.error ? "danger" : "success"}
+            dismissible
+            onClose={() => setMessage("")}
+          >
             {message?.msg}
           </Alert>
         )}

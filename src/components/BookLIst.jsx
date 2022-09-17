@@ -1,12 +1,32 @@
 import React from "react";
+import { useState, useEffect } from "react";
 import { Button, Table } from "react-bootstrap";
-import bookServices from "../services/book.services";
+import BookDataService from "../services/book.services";
 
-export default function BookLIst() {
+export default function BookList({getBookId}) {
+  const [books, setBooks] = useState([]);
+
+  useEffect(()=>{
+    getBooks();
+  }, [])
+
+  const getBooks = async () => {
+    const data = await BookDataService.getAllBooks();
+    console.log(data.docs);
+    setBooks(data.docs.map((doc) => ({ ...doc.data(), id: doc.id})));
+  }
+
+  const deleteHandler = async (id) => {
+    await BookDataService.deleteBook(id);
+    getBooks();
+  }
+
+
+
   return (
     <>
       <div className="mb-2">
-        <Button variant="dark edit">Refresh List</Button>
+        <Button variant="dark edit" onClick={getBooks}>Refresh List</Button>
       </div>
 
       <Table striped bordered hover>
@@ -21,18 +41,22 @@ export default function BookLIst() {
         </thead>
 
         <tbody>
-          <tr key="1">
-            <td>1</td>
-            <td>EL extranjero</td>
-            <td>Albert Camus</td>
-            <td>Not Available</td>
+          {books.map((doc, index) => {
+            return (
+              <tr key={doc.id}>
+                <td>{index + 1}</td>
+                <td>{doc.title}</td>
+                <td>{doc.author}</td>
+                <td>{doc.status}</td>
 
-            <td className="d-flex justify-content-center gap-4" >
-              <Button variant="secondary">Edit</Button>
+                <td className="d-flex justify-content-center gap-4">
+                  <Button variant="secondary" onClick={(e) => getBookId(doc.id)} >Edit</Button>
 
-              <Button variant="danger">Delete</Button>
-            </td>
-          </tr>
+                  <Button variant="danger" onClick={(e) => deleteHandler(doc.id)}>Delete</Button>
+                </td>
+              </tr>
+            );
+          })}
         </tbody>
       </Table>
     </>
